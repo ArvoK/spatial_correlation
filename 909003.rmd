@@ -37,16 +37,13 @@ print_installed_packages(packages)
 - **c) Dataframe als RDS im Arbeitsverzeichnis speichern** <br>
 ```{r, echo=TRUE, message=FALSE, fig.keep='all'}
 # a)
-
 rohdaten <- as.data.frame(read_csv2("909003.csv", col_names = TRUE))
 # b)
 colnames(rohdaten) <- c("ID", "Region", "Typ", "Beschaeftigte", "Bandbreite")
-#c)
+# c)
 saveRDS(rohdaten, file = "909003.rds")
 ```
 
-### Ergänzung
->  Die Anzahl der Beschäftigten im Tertiäten Sektor ist nicht aussagekräftig
 
 ## 2. Aufgabenteil
 - **a) Klassenanzahl berechnen: Sturges-Formel** <br> Angemessene Balance zwischen Übersichtlichkeit und Detailtreue
@@ -58,7 +55,7 @@ k_bandbreite <- ceiling(log2(length(rohdaten$Bandbreite)) + 1)
 # b)
 ggplot(rohdaten, aes(x = Bandbreite)) +
   geom_histogram(bins = k_bandbreite, fill = "orange", color = "darkorange4") +
-  labs(title = "Histogramm der Bandbreite", x = "Bandbreite ueber (Mbit/s) in Prozent", y = "Anzahl der Kreise")
+  labs(title = "Histogramm der Bandbreite", x = "Bandbreite mindestens 50 Mbit/s in Prozent", y = "Anzahl der Kreise")
 ```
 
 - **c) Klassenanzahl berechnen: Sturges-Formel** <br> Angemessene Balance zwischen Übersichtlichkeit und Detailtreue (Eigentlich redundant)
@@ -66,32 +63,82 @@ ggplot(rohdaten, aes(x = Bandbreite)) +
 ```{r, echo=TRUE, message=FALSE, fig.keep='all'}
 # c)
 k_beschaeftigte <- ceiling(log2(length(rohdaten$Beschaeftigte)) + 1)
-
 # d)
 ggplot(rohdaten, aes(x = Beschaeftigte)) +
   geom_histogram(bins = k_beschaeftigte, fill = "blue", color = "blue4") +
   labs(title = "Histogramm der Beschaeftigten", x = "Beschaeftigte Tertiaerer Sektor", y = "Anzahl der Kreise")
 ```
-- **a) Boxplot der Kreise m** <br>
+
+- **e) Boxplot der beiden Variablen** <br>
 
 ```{r, echo=TRUE, message=FALSE, fig.keep='all'}
-# Combine the data into a long format for easier plotting
-rohdaten_long <- rohdaten %>%
-  pivot_longer(cols = c(Bandbreite, Beschaeftigte), names_to = "Variable", values_to = "Wert")
-
-# Create the boxplot
-ggplot(rohdaten_long, aes(x = Variable, y = Wert)) +
+# e)
+ggplot(rohdaten %>% pivot_longer(cols = c(Bandbreite, Beschaeftigte), names_to = "Variable", values_to = "Wert"), aes(x = Variable, y = Wert)) +
   geom_boxplot(fill = c("orange", "blue")) +
-  labs(title = "Boxplot der Bandbreite und Beschaeftigten", x = "Variable", y = "Prozent") +
-  scale_x_discrete(labels = c("Bandbreite", "Beschaeftigte"))
+  labs(title = "Boxplot: Bandbreite und Beschaeftigten der Rohdaten", x = "Variable", y = "Prozent") +
+  scale_x_discrete(labels = c("Bandbreite mindestens 50 Mbit/s", "Beschaeftigte Tertiaerer Sektor"))
 ```
 
 ## 4. Aufgabenteil
-
 - **a) Prüfen auf NA-Werte** <br> Bereinigung der Daten nicht notwendig (keine NA-Werte)
+- **b) Bereinigung der Daten** <br> Entfernen von Ausreißern (IQR-Methode)
+- **c) Boxplot der bereinigten Daten** <br> Boxplot der bereinigten Daten
+- **d) Dataframe als RDS im Arbeitsverzeichnis speichern** <br> Speichern des bereinigten Dataframes (Subset)
 ```{r, echo=TRUE, message=FALSE, fig.keep='all'}
 #  a)
 na_columns <- sum(colSums(is.na(rohdaten)) > 0)
 print(paste("Number of NA columns :", na_columns))
 
+# b)
+remove_outliers <- function(df, column) {
+  q1 <- quantile(df[[column]], 0.25)
+  q3 <- quantile(df[[column]], 0.75)
+  iqr <- q3 - q1
+  lower_bound <- q1 - 1.5 * iqr
+  upper_bound <- q3 + 1.5 * iqr
+  df %>%
+    filter(.data[[column]] >= lower_bound & .data[[column]] <= upper_bound)
+}
+
+rohdaten_cleaned <- rohdaten %>%
+  remove_outliers("Bandbreite") %>%
+  remove_outliers("Beschaeftigte")
+
+
+rohdaten_cleaned_long <- rohdaten_cleaned %>%
+  pivot_longer(cols = c(Bandbreite, Beschaeftigte), names_to = "Variable", values_to = "Wert")
+
+# c)
+ggplot( rohdaten_cleaned %>% pivot_longer(cols = c(Bandbreite, Beschaeftigte), names_to = "Variable", values_to = "Wert"), aes(x = Variable, y = Wert)) +
+  geom_boxplot(fill = c("orange", "blue")) +
+  labs(title = "Boxplot der Bandbreite und Beschaeftigten ohne Ausreisser", x = "Variable", y = "Prozent") +
+  scale_x_discrete(labels = c("Bandbreite mindestens 50 Mbit/s", "Beschaeftigte Tertiaerer  Sektor"))
+
+# d)
+saveRDS(rohdaten_cleaned, file = "909003_clean.rds")
+```
+
+
+## 5. Aufgabenteil
+```{r, echo=TRUE, message=FALSE, fig.keep='all'}
+ggplot(rohdaten_cleaned, aes(x = Beschaeftigte, y = Bandbreite)) +
+  geom_point(color = "blue") +
+  labs(title = "Scatter Plot ",
+       x = "Beschaeftigte Tertiaerer Sektor in Prozent",
+       y = "Bandbreite mindestens 50 Mbit/s in Prozent")
+```
+
+## 6. Aufgabenteil
+- **a) Korrelation plotten** <br> Korrelationskoeffizient zwischen Bandbreite und Beschäftigten
+
+```{r, echo=TRUE, message=FALSE, fig.keep='all'}
+ggplot(rohdaten_cleaned, aes(x = Beschaeftigte, y = Bandbreite)) +
+  geom_point(size = 0.2, alpha = 0.8, na.rm = TRUE) +
+  geom_smooth(method = "lm", se = FALSE, color = "green") +
+  labs(
+    title = "Linearitaet zwischen der Bandbreite und Beschaeftigten",
+    x = "Beschaeftigte Tertiaerer Sektor in Prozent",
+    y = "Bandbreite mindestens 50 Mbit/s in Prozent"
+  ) +
+  theme_minimal()
 ```
