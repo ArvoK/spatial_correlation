@@ -1,0 +1,63 @@
+# TAKE HOME EXAMINATION
+---
+Modul: MULTIVATIATE GEODATENANALYSE WS 24/25
+Bearbeitet von: Arvo Klöck | 909003
+Variante: Bandbreitenverfügbarkeit mindestens 50 Mbit/s“ // „Beschäftigte Tertiärer Sektor"
+---
+
+### Vorbereitung der Entwicklungsumgebung
+```{r}
+# Import der benötigten Bibliotheken
+install_and_load <- function(package) {
+  if (!require(package, character.only = TRUE)) {
+    install.packages(package, dependencies = TRUE)
+    library(package, character.only = TRUE)
+  }
+}
+packages <- c("sf", "tmap", "dplyr", "classInt", "ggplot2","readr")
+lapply(packages, install_and_load)
+
+print_installed_packages <- function(packages) {
+  installed <- installed.packages()[, c("Package", "Version")]
+  installed <- installed[installed[, "Package"] %in% packages, ]
+  print(as.data.frame(installed))
+}
+
+# Aufruf der Funktion mit der Liste der installierten Pakete
+print_installed_packages(packages)
+```
+
+
+### 1.
+```{r}
+rohdaten <- as.data.frame(read_delim("909003.csv", col_names = TRUE, delim = ";"))
+# Spaltennamen anpassen
+colnames(rohdaten) <- c("ID", "Region", "Typ", "Beschaeftigte", "Bandbreite")
+saveRDS(rohdaten, file = "909003.rds")
+```
+
+### 2. Histogramm der Bandbreite
+
+```{r}
+# Klassenanzahl berechnen: Sturges-Formel
+k_bandbreite <- ceiling(log2(length(rohdaten$Bandbreite)) + 1)
+cat("Klassenanzahl:", k_bandbreite, "\n")
+
+
+# Histogramm erstellen
+ggplot(rohdaten, aes(x = Bandbreite)) +
+  geom_histogram(bins = k_bandbreite, fill = "orange", color = "darkorange4") +
+  labs(title = "Histogramm der Bandbreite", x = "Bandbreite (Mbit/s)", y = "Haeufigkeit")
+```
+### 2. Histogramm der Beschäftigten
+
+```{r}
+# Klassenanzahl berechnen: Sturges-Formel
+k_beschaeftigte <- ceiling(log2(length(rohdaten$Beschaeftigte)) + 1)
+cat("Klassenanzahl:", k_beschaeftigte, "\n")
+
+# Histogramm erstellen
+ggplot(rohdaten, aes(x = Beschaeftigte)) +
+  geom_histogram(bins = k_beschaeftigte, fill = "blue", color = "blue4") +
+  labs(title = "Histogramm der Beschaeftigten", x = "Beschaeftigte", y = "Haeufigkeit")
+```
