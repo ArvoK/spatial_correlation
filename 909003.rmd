@@ -1,0 +1,97 @@
+# Take Home Exam
+
+**Modul:** MULTIVATIATE GEODATENANALYSE WS 24/25<br>
+**Bearbeitet von:** Arvo Klöck | 909003<br>
+**Variante:**  „Beschäftigte Tertiärer Sektor" // Bandbreitenverfügbarkeit mindestens 50 Mbit/s“ <br>
+<hr>
+
+## Vorbereitung der Entwicklungsumgebung
+- **a) Setzen des Arbeitsverzeichnisses**  <br> Bitte vor dem Ausführen auf den Ordner anpassen, in dem diese Datei liegt.
+- **b) Benötigten Pakete laden** <br> Die Funktion `install_and_load` installiert/läd ein Paket, falls es noch nicht installiert ist.
+```{r, echo=TRUE, message=FALSE, fig.keep='all'}
+# a)
+setwd("E:/srv/repos/spatial_correlation")
+
+# b)
+install_and_load <- function(package) {
+  if (!require(package, character.only = TRUE)) {
+    install.packages(package, dependencies = TRUE)
+    library(package, character.only = TRUE)
+  }
+}
+packages <- c("sf", "tmap", "dplyr", "classInt", "ggplot2","readr","tidyr")
+invisible(lapply(packages, install_and_load))
+
+print_installed_packages <- function(packages) {
+  installed <- installed.packages()[, c("Package", "Version")]
+  installed <- installed[installed[, "Package"] %in% packages, ]
+  print(as.data.frame(installed))
+}
+print_installed_packages(packages)
+```
+
+
+## 1. Aufgabenteil
+- **a) CSV als Dataframe Objekt importieren**  <br>
+- **b) Tabellenspalten Definieren** <br>
+- **c) Dataframe als RDS im Arbeitsverzeichnis speichern** <br>
+```{r, echo=TRUE, message=FALSE, fig.keep='all'}
+# a)
+
+rohdaten <- as.data.frame(read_csv2("909003.csv", col_names = TRUE))
+# b)
+colnames(rohdaten) <- c("ID", "Region", "Typ", "Beschaeftigte", "Bandbreite")
+#c)
+saveRDS(rohdaten, file = "909003.rds")
+```
+
+### Ergänzung
+>  Die Anzahl der Beschäftigten im Tertiäten Sektor ist nicht aussagekräftig
+
+## 2. Aufgabenteil
+- **a) Klassenanzahl berechnen: Sturges-Formel** <br> Angemessene Balance zwischen Übersichtlichkeit und Detailtreue
+- **b) Histogramm der Bandbreite** <br> `bins` ist die Anzahl der Klassen im Histogramm.
+```{r, echo=TRUE, message=FALSE, fig.keep='all'}
+# a)
+k_bandbreite <- ceiling(log2(length(rohdaten$Bandbreite)) + 1)
+
+# b)
+ggplot(rohdaten, aes(x = Bandbreite)) +
+  geom_histogram(bins = k_bandbreite, fill = "orange", color = "darkorange4") +
+  labs(title = "Histogramm der Bandbreite", x = "Bandbreite ueber (Mbit/s) in Prozent", y = "Anzahl der Kreise")
+```
+
+- **c) Klassenanzahl berechnen: Sturges-Formel** <br> Angemessene Balance zwischen Übersichtlichkeit und Detailtreue (Eigentlich redundant)
+- **d) Histogramm der Beschäftigten** <br> `bins` ist die Anzahl der Klassen im Histogramm.
+```{r, echo=TRUE, message=FALSE, fig.keep='all'}
+# c)
+k_beschaeftigte <- ceiling(log2(length(rohdaten$Beschaeftigte)) + 1)
+
+# d)
+ggplot(rohdaten, aes(x = Beschaeftigte)) +
+  geom_histogram(bins = k_beschaeftigte, fill = "blue", color = "blue4") +
+  labs(title = "Histogramm der Beschaeftigten", x = "Beschaeftigte Tertiaerer Sektor", y = "Anzahl der Kreise")
+```
+- **a) Boxplot der Kreise m** <br>
+
+```{r, echo=TRUE, message=FALSE, fig.keep='all'}
+# Combine the data into a long format for easier plotting
+rohdaten_long <- rohdaten %>%
+  pivot_longer(cols = c(Bandbreite, Beschaeftigte), names_to = "Variable", values_to = "Wert")
+
+# Create the boxplot
+ggplot(rohdaten_long, aes(x = Variable, y = Wert)) +
+  geom_boxplot(fill = c("orange", "blue")) +
+  labs(title = "Boxplot der Bandbreite und Beschaeftigten", x = "Variable", y = "Prozent") +
+  scale_x_discrete(labels = c("Bandbreite", "Beschaeftigte"))
+```
+
+## 4. Aufgabenteil
+
+- **a) Prüfen auf NA-Werte** <br> Bereinigung der Daten nicht notwendig (keine NA-Werte)
+```{r, echo=TRUE, message=FALSE, fig.keep='all'}
+#  a)
+na_columns <- sum(colSums(is.na(rohdaten)) > 0)
+print(paste("Number of NA columns :", na_columns))
+
+```
