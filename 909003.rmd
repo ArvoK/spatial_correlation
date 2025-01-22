@@ -9,6 +9,8 @@
 - **a) Setzen des Arbeitsverzeichnisses**  <br> Bitte vor dem Ausführen auf den Ordner anpassen, in dem diese Datei liegt.
 - **b) Benötigten Pakete laden** <br> Die Funktion `install_and_load` installiert/läd ein Paket, falls es noch nicht installiert ist.
 ```{r, echo=TRUE, message=FALSE, fig.keep='all'}
+knitr::opts_chunk$set(encoding = "UTF-8")
+
 # a)
 setwd("E:/srv/repos/spatial_correlation")
 
@@ -66,7 +68,7 @@ k_beschaeftigte <- ceiling(log2(length(rohdaten$Beschaeftigte)) + 1)
 # d)
 ggplot(rohdaten, aes(x = Beschaeftigte)) +
   geom_histogram(bins = k_beschaeftigte, fill = "blue", color = "blue4") +
-  labs(title = "Histogramm der Beschaeftigten", x = "Beschaeftigte Tertiaerer Sektor", y = "Anzahl der Kreise")
+  labs(title = "Histogramm der Beschäftigten", x = "Beschäftigte Tertiärer Sektor", y = "Anzahl der Kreise")
 ```
 
 - **e) Boxplot der beiden Variablen** <br>
@@ -75,8 +77,8 @@ ggplot(rohdaten, aes(x = Beschaeftigte)) +
 # e)
 ggplot(rohdaten %>% pivot_longer(cols = c(Bandbreite, Beschaeftigte), names_to = "Variable", values_to = "Wert"), aes(x = Variable, y = Wert)) +
   geom_boxplot(fill = c("orange", "blue")) +
-  labs(title = "Boxplot: Bandbreite und Beschaeftigten der Rohdaten", x = "Variable", y = "Prozent") +
-  scale_x_discrete(labels = c("Bandbreite mindestens 50 Mbit/s", "Beschaeftigte Tertiaerer Sektor"))
+  labs(title = "Boxplot: Bandbreite und Beschäftigten der Rohdaten", x = "Variable", y = "Prozent") +
+  scale_x_discrete(labels = c("Bandbreite mindestens 50 Mbit/s", "Beschäftigte Tertiärer Sektor"))
 ```
 
 ## 4. Aufgabenteil
@@ -111,8 +113,8 @@ rohdaten_cleaned_long <- rohdaten_cleaned %>%
 # c)
 ggplot( rohdaten_cleaned %>% pivot_longer(cols = c(Bandbreite, Beschaeftigte), names_to = "Variable", values_to = "Wert"), aes(x = Variable, y = Wert)) +
   geom_boxplot(fill = c("orange", "blue")) +
-  labs(title = "Boxplot der Bandbreite und Beschaeftigten ohne Ausreisser", x = "Variable", y = "Prozent") +
-  scale_x_discrete(labels = c("Bandbreite mindestens 50 Mbit/s", "Beschaeftigte Tertiaerer  Sektor"))
+  labs(title = "Boxplot der Bandbreite und Beschäftigten ohne Ausreisser", x = "Variable", y = "Prozent") +
+  scale_x_discrete(labels = c("Bandbreite mindestens 50 Mbit/s", "Beschäftigte Tertiärer  Sektor"))
 
 # d)
 saveRDS(rohdaten_cleaned, file = "909003_clean.rds")
@@ -124,7 +126,7 @@ saveRDS(rohdaten_cleaned, file = "909003_clean.rds")
 ggplot(rohdaten_cleaned, aes(x = Beschaeftigte, y = Bandbreite)) +
   geom_point(color = "blue") +
   labs(title = "Scatter Plot ",
-       x = "Beschaeftigte Tertiaerer Sektor in Prozent",
+       x = "Beschäftigte Tertiärer Sektor in Prozent",
        y = "Bandbreite mindestens 50 Mbit/s in Prozent")
 ```
 
@@ -136,9 +138,93 @@ ggplot(rohdaten_cleaned, aes(x = Beschaeftigte, y = Bandbreite)) +
   geom_point(size = 0.2, alpha = 0.8, na.rm = TRUE) +
   geom_smooth(method = "lm", se = FALSE, color = "green") +
   labs(
-    title = "Linearitaet zwischen der Bandbreite und Beschaeftigten",
-    x = "Beschaeftigte Tertiaerer Sektor in Prozent",
+    title = "Linearität zwischen der Bandbreite und Beschäftigten",
+    x = "Beschäftigte Tertiärer Sektor in Prozent",
     y = "Bandbreite mindestens 50 Mbit/s in Prozent"
   ) +
   theme_minimal()
+```
+
+## 7. Aufgabenteil
+- **a)
+
+```{r, echo=TRUE, message=FALSE, fig.keep='all'}
+# Fit the linear model
+model <- lm(Bandbreite ~ Beschaeftigte, data = rohdaten_cleaned)
+
+# Summary of the model
+summary_model <- summary(model)
+
+# Extracting R-squared and Adjusted R-squared
+r_squared <- summary_model$r.squared
+adjusted_r_squared <- summary_model$adj.r.squared
+
+# Extracting Residual Standard Error
+rse <- summary_model$sigma
+
+# Extracting p-values of the coefficients
+p_values <- summary_model$coefficients[, 4]
+
+# Print the results
+# Ausgabe der Ergebnisse
+cat("R-Quadrat: ", r_squared, "\n")
+cat("Residuale Standardabweichung: ", rse, "\n")
+cat("P-Werte der Koeffizienten:",p_values,"\n")
+```
+>**R²:** Geben die generelle Modellgüte an.<br>
+Ein Wert von ~0,12 deutet auf ein schwach erklärendes Modell hin. Das bedeutet:<br>
+>- Es gibt nur eine sehr schwache Beziehung zwischen den erklärenden Variablen und der Zielvariable.<br>
+>- Das Modell ist möglicherweise nicht ausreichend, um zuverlässige Vorhersagen zu treffen.<br>
+>- Die Beziehung zwischen den Variablen nicht linear sein.
+
+>**Standardabweichung der Residuen:** Zeigt, wie genau das Modell die Daten beschreibt eine Abweichung von 3.8%<br>
+
+>**P-Werte:** Bewerten die Signifikanz der einzelnen Modellparameter<br>
+Diese Werte sind extrem klein (weit unter dem üblichen Signifikanzniveau von 0,05). Das bedeutet:<br>
+> -Die unabhängigen Variablen haben einen signifikanten Einfluss auf die abhängige Variable.<br>
+> -Es ist sehr unwahrscheinlich, dass diese Ergebnisse zufällig zustande gekommen sin<br>
+
+```{r, echo=TRUE, message=FALSE, fig.keep='all'}
+
+# Shapefile laden
+shapefile <- sf::st_read("shp/VZ250_GEM.shp")
+
+# Dictionary mit ARS-Nummern und Bundesländern zur zurodnung zu den Bundesland Shapefiles
+beschriftung_bundeslaender <- c(
+  "01" = "Schleswig-Holstein",
+  "02" = "Hamburg",
+  "03" = "Niedersachsen",
+  "04" = "Bremen",
+  "05" = "Nordrhein-Westfalen",
+  "06" = "Hessen",
+  "07" = "Rheinland-Pfalz",
+  "08" = "Baden-Wuettemberg",
+  "09" = "Bayern",
+  "10" = "Saarland",
+  "11" = "Berlin",
+  "12" = "Brandenburg",
+  "13" = "Mecklenburg-Vorpommern",
+  "14" = "Sachsen",
+  "15" = "Sachsen-Anhalt",
+  "16" = "Thueringen"
+)
+```
+
+## 9. Aufgabenteil
+
+```{r, echo=TRUE, message=FALSE, fig.keep='all'}
+# Gruppieren nach Kreisen und Gemeinden
+kreise <- shapefile %>%
+  dplyr::group_by(ARS_K, GEN_K) %>%
+  dplyr::summarize(Gemeinden = n())
+
+# Gruppieren nach Bundesländern
+bundeslaender <- shapefile %>%
+  dplyr::mutate(Bundesland = recode(substr(ARS_K, 1, 2), !!!bundesland_dict)) %>%
+  dplyr::group_by(Bundesland) %>%
+  dplyr::summarize(Gemeinden = n())
+
+# Daten verknüpfen
+Kreisdata_sf <- merge(x = Kreis_sf, y = INKAR, by.x = "ARS_K", by.y = "ID")
+
 ```
