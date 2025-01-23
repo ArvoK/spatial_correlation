@@ -1,6 +1,6 @@
-# Take Home Exam
+# Take Home Examination
 
-**Modul:** MULTIVATIATE GEODATENANALYSE WS 24/25<br>
+**Modul:** Multivariate Geodatenanalyse WS 24/25<br>
 **Bearbeitet von:** Arvo Klöck | 909003<br>
 **Variante:**  „Beschäftigte Tertiärer Sektor" // Bandbreitenverfügbarkeit mindestens 50 Mbit/s“ <br>
 <hr>
@@ -50,6 +50,7 @@ saveRDS(rohdaten, file = "909003.rds")
 ## 2. Aufgabenteil
 - **a) Klassenanzahl berechnen: Sturges-Formel** <br> Angemessene Balance zwischen Übersichtlichkeit und Detailtreue
 - **b) Histogramm der Bandbreite** <br> `bins` ist die Anzahl der Klassen im Histogramm.
+
 ```{r, echo=TRUE, message=FALSE, fig.keep='all'}
 # a)
 k_bandbreite <- ceiling(log2(length(rohdaten$Bandbreite)) + 1)
@@ -57,7 +58,7 @@ k_bandbreite <- ceiling(log2(length(rohdaten$Bandbreite)) + 1)
 # b)
 ggplot(rohdaten, aes(x = Bandbreite)) +
   geom_histogram(bins = k_bandbreite, fill = "orange", color = "darkorange4") +
-  labs(title = "Histogramm der Bandbreite", x = "Bandbreite mindestens 50 Mbit/s in Prozent", y = "Anzahl der Kreise")
+  labs(title = "Abb. 1: Histogramm der Bandbreite (Roh)", x = "Bandbreite mindestens 50 Mbit/s in Prozent", y = "Anzahl der Kreise")
 ```
 
 - **c) Klassenanzahl berechnen: Sturges-Formel** <br> Angemessene Balance zwischen Übersichtlichkeit und Detailtreue (Eigentlich redundant)
@@ -68,8 +69,13 @@ k_beschaeftigte <- ceiling(log2(length(rohdaten$Beschaeftigte)) + 1)
 # d)
 ggplot(rohdaten, aes(x = Beschaeftigte)) +
   geom_histogram(bins = k_beschaeftigte, fill = "blue", color = "blue4") +
-  labs(title = "Histogramm der Beschäftigten", x = "Beschäftigte Tertiärer Sektor", y = "Anzahl der Kreise")
+  labs(title = "Abb. 2: Histogramnm Beschäftigte Tertiärer Sektor ", x = "Beschäftigte Tertiärer Sektor", y = "Anzahl der Kreise")
 ```
+`Abb 2.`<br>
+
+> - Normalverteilt <br>
+> - Leicht rechtsschief
+
 
 - **e) Boxplot der beiden Variablen** <br>
 
@@ -77,9 +83,29 @@ ggplot(rohdaten, aes(x = Beschaeftigte)) +
 # e)
 ggplot(rohdaten %>% pivot_longer(cols = c(Bandbreite, Beschaeftigte), names_to = "Variable", values_to = "Wert"), aes(x = Variable, y = Wert)) +
   geom_boxplot(fill = c("orange", "blue")) +
-  labs(title = "Boxplot: Bandbreite und Beschäftigten der Rohdaten", x = "Variable", y = "Prozent") +
+  labs(title = "Abb. 3: Boxplots der Rohdaten", x = "Variable", y = "Prozent") +
   scale_x_discrete(labels = c("Bandbreite mindestens 50 Mbit/s", "Beschäftigte Tertiärer Sektor"))
 ```
+
+
+## 3. Aufgabenteil (Zusatzaufgabe)
+**a) Rechtsschiefe:** <br>
+- Eine logarithmische Transformation reduziert die Schiefe reduzieren, indem sie die größeren Werte relativ stärker verkleinert als die kleineren Werte.
+**b) Daten weiter verwenden:**
+```{r, echo=TRUE, message=FALSE, fig.keep='all'}
+# a)
+ggplot(rohdaten, aes(x = log(Bandbreite+1))) +
+  geom_histogram(bins = k_bandbreite, fill = "orange", color = "darkorange4") +
+  labs(title = "Abb. 4: Korrekturversuch Rechtsschiefe", x = "Bandbreite mindestens 50 Mbit/s in Prozent", y = "Anzahl der Kreise")
+
+# b)
+#rohdaten <- rohdaten %>%
+#  mutate(Bandbreite = log(Bandbreite + 1))
+```
+
+`Abb. 4`<br>
+
+> Die Schiefe kann durch die logarithmische Transformation reduziert werden. <br>
 
 ## 4. Aufgabenteil
 - **a) Prüfen auf NA-Werte** <br> Bereinigung der Daten nicht notwendig (keine NA-Werte)
@@ -113,7 +139,7 @@ rohdaten_cleaned_long <- rohdaten_cleaned %>%
 # c)
 ggplot( rohdaten_cleaned %>% pivot_longer(cols = c(Bandbreite, Beschaeftigte), names_to = "Variable", values_to = "Wert"), aes(x = Variable, y = Wert)) +
   geom_boxplot(fill = c("orange", "blue")) +
-  labs(title = "Boxplot der Bandbreite und Beschäftigten ohne Ausreisser", x = "Variable", y = "Prozent") +
+  labs(title = "Abb. 5: Boxplots der bereinigten Daten", x = "Variable", y = "Prozent") +
   scale_x_discrete(labels = c("Bandbreite mindestens 50 Mbit/s", "Beschäftigte Tertiärer  Sektor"))
 
 # d)
@@ -122,13 +148,32 @@ saveRDS(rohdaten_cleaned, file = "909003_clean.rds")
 
 
 ## 5. Aufgabenteil
+- **a) Puntkwolke Plotten**
 ```{r, echo=TRUE, message=FALSE, fig.keep='all'}
+# a)
 ggplot(rohdaten_cleaned, aes(x = Beschaeftigte, y = Bandbreite)) +
   geom_point(color = "blue") +
-  labs(title = "Scatter Plot ",
+  labs(title = "Abb. 6: Streuungsdiagramm der bereinigten Daten",
        x = "Beschäftigte Tertiärer Sektor in Prozent",
        y = "Bandbreite mindestens 50 Mbit/s in Prozent")
 ```
+
+### Einordnung der Variablen <br>
+
+> Ich möchte wissen, ob es in Deutschland einen Trend gibt, dass Kreise mit einem hohen Anteil an Beschäftigten im tertiären Sektor auch einen tendenziell hohen Ausbau der Bandbreite bedeutet.<br>
+> Demnach ist die Bandbreite meine abhängige Variable . <br>
+
+### Interpretation der Punktwolke <br>
+
+`Abb. 5`<br>
+
+> - **Anordnung der Punkte**: <br>
+> -  Die Punkte zeigen, dass es eine leichte Tendenz gibt, dass Kreise mit einem hohen Anteil an Beschäftigten im tertiären Sektor auch einen tendenziell hohen Ausbau der Bandbreite haben.<br>
+> - **Cluster**: <br>
+> - Gerade im hohen Prozentbereich bei dem Breitbandausbau gibt es eine hohe Dichte an Punkten. Das bedeutet, dass es viele Kreise gibt, die einen hohen Anteil an Beschäftigten im tertiären Sektor über überdurchschnittliche Bandbreite verfügen.<br>
+Dies trifft aber nicht auf die unteren Prozente zu, gerade hier sind die Punkte sehr verstreut und es gibt keine klare aussage.<br>
+> - **Fazit** <br>
+> - Es gibt **keine** klare lineare Beziehung zwischen den beiden Variablen jedoch gibt es einen Aufwärtstrend, welcher sich an die 100 % Breitbandausbau annähert.<br>
 
 ## 6. Aufgabenteil
 - **a) Korrelation plotten** <br> Korrelationskoeffizient zwischen Bandbreite und Beschäftigten
@@ -138,31 +183,38 @@ ggplot(rohdaten_cleaned, aes(x = Beschaeftigte, y = Bandbreite)) +
   geom_point(size = 0.2, alpha = 0.8, na.rm = TRUE) +
   geom_smooth(method = "lm", se = FALSE, color = "green") +
   labs(
-    title = "Linearität zwischen der Bandbreite und Beschäftigten",
+    title = "Abb. 7: Regressionsgerade der bereinigten Daten",
     x = "Beschäftigte Tertiärer Sektor in Prozent",
     y = "Bandbreite mindestens 50 Mbit/s in Prozent"
   ) +
   theme_minimal()
 ```
 
+
+### Interpretation der Korrelation <br>
+
+`Abb. 6`<br>
+
+> Das Modell kann die Daten nicht erklären.
+> Eine Homoskedastizität ist nicht gegeben, da die Residuen nicht gleichmäßig verteilt sind und einen hohen und ungleichmäßigen Streuungsbereich aufweisen.
+> Somit ist eine Regression nicht sinnvoll, da die Daten nicht linear sind und die Residuen nicht gleichmäßig verteilt sind.
+
 ## 7. Aufgabenteil
-- **a)
+- **a) Korrelation berechnen** <br> Lineares Modell zwischen Bandbreite und Beschäftigten erstellen
+- **b) R², Residuale Standardabweichung und P-Werte der Koeffizienten abspeichern und printen** <br>
 
 ```{r, echo=TRUE, message=FALSE, fig.keep='all'}
-# Fit the linear model
+# a)
 model <- lm(Bandbreite ~ Beschaeftigte, data = rohdaten_cleaned)
 
-# Summary of the model
+# b)
 summary_model <- summary(model)
 
-# Extracting R-squared and Adjusted R-squared
 r_squared <- summary_model$r.squared
 adjusted_r_squared <- summary_model$adj.r.squared
 
-# Extracting Residual Standard Error
 rse <- summary_model$sigma
 
-# Extracting p-values of the coefficients
 p_values <- summary_model$coefficients[, 4]
 
 # Print the results
@@ -171,7 +223,7 @@ cat("R-Quadrat: ", r_squared, "\n")
 cat("Residuale Standardabweichung: ", rse, "\n")
 cat("P-Werte der Koeffizienten:",p_values,"\n")
 ```
->**R²:** Geben die generelle Modellgüte an.<br>
+>**R²:** Gibt die generelle Modellgüte an.<br>
 Ein Wert von ~0,12 deutet auf ein schwach erklärendes Modell hin. Das bedeutet:<br>
 >- Es gibt nur eine sehr schwache Beziehung zwischen den erklärenden Variablen und der Zielvariable.<br>
 >- Das Modell ist möglicherweise nicht ausreichend, um zuverlässige Vorhersagen zu treffen.<br>
@@ -184,12 +236,15 @@ Diese Werte sind extrem klein (weit unter dem üblichen Signifikanzniveau von 0,
 > -Die unabhängigen Variablen haben einen signifikanten Einfluss auf die abhängige Variable.<br>
 > -Es ist sehr unwahrscheinlich, dass diese Ergebnisse zufällig zustande gekommen sin<br>
 
+## 9. Aufgabenteil
+- **a)  Shapefile wird in R-Variable abgespeichert** <br>
+- **b) Beschriftung der Bundesländer als Dictonary anlegen** <br>
 ```{r, echo=TRUE, message=FALSE, fig.keep='all'}
 
-# Shapefile laden
+# a)
 shapefile <- sf::st_read("shp/VZ250_GEM.shp")
 
-# Dictionary mit ARS-Nummern und Bundesländern zur zurodnung zu den Bundesland Shapefiles
+# b)
 beschriftung_bundeslaender <- c(
   "01" = "Schleswig-Holstein",
   "02" = "Hamburg",
@@ -206,25 +261,191 @@ beschriftung_bundeslaender <- c(
   "13" = "Mecklenburg-Vorpommern",
   "14" = "Sachsen",
   "15" = "Sachsen-Anhalt",
-  "16" = "Thueringen"
+  "16" = "Thüringen"
 )
 ```
 
-## 9. Aufgabenteil
 
+- **c)  R-Variable nach Gemeinden Gruppiert abspeichern** <br>
+- **d) Shapefile nach Bundesländern Gruppieren nach ARS** <br>
+- **e) Daten verknüpfen (Raumbezug herstellen)** <br>
+- **f) Identifizieren der fehlenden Kreise um auf der Karte die Ausreißer zu benennen** <br>
 ```{r, echo=TRUE, message=FALSE, fig.keep='all'}
-# Gruppieren nach Kreisen und Gemeinden
+# c)
 kreise <- shapefile %>%
   dplyr::group_by(ARS_K, GEN_K) %>%
   dplyr::summarize(Gemeinden = n())
 
-# Gruppieren nach Bundesländern
+# d)
 bundeslaender <- shapefile %>%
-  dplyr::mutate(Bundesland = recode(substr(ARS_K, 1, 2), !!!bundesland_dict)) %>%
+  dplyr::mutate(Bundesland = recode(substr(ARS_K, 1, 2), !!!beschriftung_bundeslaender)) %>%
   dplyr::group_by(Bundesland) %>%
   dplyr::summarize(Gemeinden = n())
 
-# Daten verknüpfen
-Kreisdata_sf <- merge(x = Kreis_sf, y = INKAR, by.x = "ARS_K", by.y = "ID")
+# e)
+data_cleaned_geom_kreise <- merge(x = kreise, y = rohdaten_cleaned, by.x = "ARS_K", by.y = "ID")
+
+# f)
+fehlende_kreise <- setdiff(kreise$ARS_K, data_cleaned_geom_kreise$ARS_K)
+fehlende_kreise_df <- kreise[kreise$ARS_K %in% fehlende_kreise, ]
 
 ```
+## 10. Aufgabenteil
+- **a) Differenz zwischen Bandbreite und Beschäftigten berechnen** <br>
+- **b) Karte der Differenz plotten** <br>
+```{r, echo=TRUE, message=FALSE, fig.keep='all'}
+# a)
+data_cleaned_geom_kreise_01 <- data_cleaned_geom_kreise %>%
+  mutate(Differenz = Bandbreite - Beschaeftigte)
+
+# b)
+map <- tm_shape(data_cleaned_geom_kreise_01) +
+  tm_fill(
+    "Differenz",
+    title = "Differenz (Bandbreite - Beschäftigte) in %",
+    palette = "-RdYlBu"
+  ) +
+  tm_shape(bundeslaender) +
+  tm_borders(col = 'grey50') +
+  tm_scale_bar(
+    width = 0.18,
+    position = c("RIGHT", "BOTTOM"),
+    text.size = 0.6,
+    color.dark = "black",
+    color.light = "white",
+    just = c("RIGHT", "BOTTOM"),
+    lwd = 1
+  ) +
+  tm_layout(
+    frame = FALSE,
+    main.title = "Abb. 7: Gegenüberstellung Bandbreite - Beschäftigungsanteil Tertiärer Sektor",
+    main.title.position = "center",
+    main.title.size = 0.9,
+    title.position = c("center", "top"),
+    legend.title.size = 0.8,
+    legend.outside = TRUE,
+    title.snap.to.legend = FALSE
+  ) +
+  tm_shape(fehlende_kreise_df) +
+  tm_fill(col = "white") +
+  tm_add_legend(type = "fill", labels = "Keine Informationen", col = "white") +
+  tm_shape(sf::st_centroid(bundeslaender)) +
+  tm_text(
+    "Bundesland",
+    remove.overlap = TRUE,
+    size = 0.65,
+    col = "black",
+    fontface = "bold",
+    shadow = FALSE
+  )
+
+tmap_mode("plot")
+invisible(print(map))
+```
+
+### Interpretation der Karte
+
+`Abb. 8`<br>
+
+> -  Wir können sehen das es keinen Kreis gibt, wo es Prozentual mehr beschäftigte im tertiären Sektor arbeiten als die Bandbreite über 50 mb/s gewährleistet sind. <br>
+> -  Nach Süden hin nimmt die Differenz zu, dort gibt es mehr gutes Internet, auch wenn es weniger Beschäftigte im tertiären Sektor gibt. <br>
+> -  Im Ost-West Vergleich gibt es keine klare Tendenz <br>
+
+## 11. Aufgabenteil
+- **a) Lineare Regression durchführen** <br>
+- **b) Klassen nach Sturges definieren** <br>
+- **c) Klassenbeschriftungen definieren** <br>
+- **d) Karte der Residuen plotten** <br>
+```{r, echo=TRUE, message=FALSE, fig.keep='all'}
+
+# a)
+model <- lm(Beschaeftigte ~ Bandbreite, data = data_cleaned_geom_kreise)
+data_cleaned_geom_kreise$residuals <- as.numeric(residuals(model))
+
+
+# b)
+residuals_class <- classInt::classIntervals(
+  data_cleaned_geom_kreise$residuals,
+  n = nclass.Sturges(data_cleaned_geom_kreise$residuals),
+  style = 'pretty'
+)
+
+# c)
+breaks <- residuals_class$brks
+labels <- c(
+  paste0("<", breaks[2]),
+  paste0(breaks[-c(1, length(breaks))], " to <", breaks[-c(1, 2)]),
+  paste0(">", breaks[length(breaks) - 1])
+)
+
+# d)
+res_map <- tm_shape(data_cleaned_geom_kreise) +
+  tm_fill(
+    "residuals",
+    breaks = residuals_class$brks,
+    title = "Residuen in %",
+    labels = labels,
+    midpoint = NA,
+    palette = "-RdYlBu"
+  ) +
+  tm_shape(bundeslaender) +
+  tm_borders(col = 'grey50') +
+  tm_scale_bar(
+    width = 0.18,
+    position = c("RIGHT", "BOTTOM"),
+    text.size = 0.6,
+    color.dark = "black",
+    color.light = "white",
+    just = c("RIGHT", "BOTTOM"),
+    lwd = 1
+  ) +
+  tm_layout(
+    frame = FALSE,
+    main.title = "Abb. 9: Abweichungen vom Erwartungswert",
+    main.title.position = "center",
+    main.title.size = 0.9,
+    title.position = c("center", "top"),
+    legend.title.size = 0.8,
+    legend.outside = TRUE,
+    title.snap.to.legend = FALSE
+  ) +
+  tm_shape(fehlende_kreise_df) +
+  tm_fill(col = "white") +
+  tm_add_legend(type = "fill", labels = "Keine Informationen", col = "white") +
+  tm_shape(sf::st_centroid(bundeslaender)) +
+  tm_text(
+    "Bundesland",
+    remove.overlap = TRUE,
+    size = 0.65,
+    col = "black",
+    fontface = "bold",
+    shadow = FALSE
+  )
+
+tmap_mode("plot")
+invisible(print(res_map))
+```
+
+### Interpretation der Karte
+
+`Abb. 9`<br>
+
+> - Im Norden und Nord-Osten sehen wir viele Ausreißer. Das deutet auf eine hohe Beschäftigungsquote im Tertiären Setor hin, die aber nicht vom Internetausbau getragen wird. <br>
+> - Im Süden und Westen gibt es weniger Ausreißer, wenn sie vorkommen sind diese aber Positiv. Es wird dort allgemein mehr auf den Breitbandausbau wert gelegt, somit befinden sich die Residuen nah an dem Cluster oberhalb der 90% des Breitbandausbaus.<br>
+> - Allerdings lässt sich der einfluss des Breitbandausbaus auf die Beschäftigungsquote mit der Regression auch in diesen Regionen nicht bestätigen, dar auch in Gebieten mit sehr ausgehprägen primären Sektor über hohen Bandbreitenanteil verfügt. <br>
+
+### Ähnlichkeiten der beiden Karten
+
+`Abb. 8, Abb. 9`<br>
+
+> - Extremwerte zeichnen sich räumlich ähnlich ab <br>
+> - Nord/Süd gefälle <br>
+> - Sonst keinen weiteren zusammenhang zwischen den Karten zu erkennen. <br>
+
+### Fazit
+
+`Abb. 8, Abb. 9, Abb. 4`<br>
+
+> In Mecklenburg-Vorpommern waren die Abweichungen so stark, dass sie als Ausreißer aus den Daten entfernt werden mussten. Dies könnte darauf zurückzuführen sein, dass hier dicht besiedelte Gebiete mit ländlichen Regionen verglichen werden, wo die Herausforderung, flächendeckend Internet bereitzustellen, deutlich größer ist. Die infrastrukturellen Unterschiede zwischen urbanen und ruralen Gebieten spielen hier eine entscheidende Rolle.<br>
+Die Ausreißer stammen vor allem aus ländlich geprägten Regionen mit einem hohen Anteil an Beschäftigten im tertiären Sektor. Um das Modell robuster gegenüber solchen Extremwerten zu gestalten, wurden die Daten entsprechend bereinigt.<br>
+Leider ließ sich kein linearer Zusammenhang zwischen den beiden Variablen feststellen, was die Interpretation der Daten erschwert. Dennoch war es möglich, aussagekräftige Schlussfolgerungen zu ziehen und zu verdeutlichen, warum in diesem Fall kein linearer Zusammenhang zu erwarten ist.<br> Dies unterstreicht die Komplexität der Thematik und die Notwendigkeit, weitere Faktoren wie infrastrukturelle Gegebenheiten, politische Maßnahmen und sozioökonomische Bedingungen in zukünftigen Analysen zu berücksichtigen.
